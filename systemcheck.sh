@@ -134,8 +134,7 @@ pmcheck()
 	UPTIME=`awk '{print int($1)}' /proc/uptime`  
 	PMTIME=$((UPTIME / 86400)) 
 	line
-	echo 'UPTIME SINCE LAST REBOOT : ' ${PMTIME} 'days'
-
+	echo 'UPTIME SINCE LAST REBOOT : ' $((${PMTIME}-${PMDATE})) 'days'
 } 
 
 croninfo()
