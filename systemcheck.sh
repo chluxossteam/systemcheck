@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 ##############################
 ## To do 
@@ -19,6 +19,13 @@ UBUNTUID="Ubuntu"
 DEBIANID="Debian"
 CENTOSID="CentOS"
 
+# Default Variables
+OUTPUT_DIR=`pwd`
+OUTPUT_FILE=`hostname`_$(date '+%Y-%m-%d')
+
+#echo $OUTPUT_DIR
+#echo $OUTPUT_FILE 
+
 
 line() 
 { 
@@ -32,12 +39,66 @@ section()
     printf "%*s\n" $(((${#1}+$(tput cols))/2)) "$1" 
     #printf "%*s\n" $(((${#1}+80)/2)) "$1" 
 	line 
-}
-#title() 
-#{ 
-#	section "SERVER CHECK REPORT"
-#
+} 
+
+checkenv()
+{ 
+	echo "CHECK ENVIRONMENT"
+	#echo "1. Check config file" 
+	checkconf 
+	#echo "2. Check output directory / file"  
+	#checkoutputdir	
+	echo "3. Check require command"	  
+	cmdset=( "hostname" "uname" "date" "awk" "crontab" "ifconfig" "route" "netstat" "df" "cat" "mount" "mpstat" "mktemp" "ps" "sort" "free" "vmstat" "swapon" "iostat" "lsb_release" "dmidecode"  ) 
+	for cmd in "${cmdset[@]}"  
+	do  
+		checkcmd $cmd
+	done
+} 
+
+checkconf()
+{  
+	CONF_FILE="./systemcheck.conf"
+	if [ -f $CONF_FILE ]; then
+		result="ok"
+		source $CONF_FILE   
+	else 
+		result="fail"
+	fi 
+	echo "CONFIG FILE : $CONF_FILE ---------------------- [${result}]"
 	
+}
+
+checkoutputdir()
+{ 
+	if [ -d $OUTPUT_DIR ]; then  
+		result="ok"
+	else
+		result="fail"
+	fi 
+	echo "OUTPUT DIR : $OUTPUT_DIR  ---------------------- [${result}]"  
+	#echo "!!! LOG FILE PATH : ${OUTPUT_DIR}${OUTPUT_FILE}"  
+
+	touch ${OUTPUT_DIR}${OUTPUT_FILE}
+	if [ -f ${OUTPUT_DIR}${OUTPUT_FILE} ]; then    
+		result="ok"
+	else 
+		result="fail" 
+		exit;
+	fi  
+ 
+	echo "!!! LOG FILE PATH : ${OUTPUT_DIR}${OUTPUT_FILE} -------------- [${result}]"  
+	
+}
+checkcmd()
+{ 
+	if [ -x "$(command -v ${1})" ] ; then     
+		result="ok" 
+	else 
+		result="fail"
+	fi   
+	echo ${1} ------------------------------ [${result}]
+}	
 title()
 {    
     eval printf %.0s\# '{1..'${COLUMNS:-$(tput cols)}'}'; echo    
@@ -226,7 +287,7 @@ function checkswap()
 { 
 	section "Swap Usage Status" 
 	ps ax -o pid,args | grep -v '^  PID'|sed -e 's,^ *,,' > ./ps_ax.output
-	echo -n > ./results
+	echo -n > ./check_swap.output
 
 	for swappid in $(grep -l Swap /proc/[1-9]*/smaps ); do
         	swapusage=0
@@ -241,7 +302,9 @@ function checkswap()
 	done
 
 	echo "Top 10 swap using processes which are still running:"
-	sort -nr ./results | head -n 10
+	sort -nr ./results | head -n 10 
+	rm -rf ./ps_ax.output
+	rm -rf ./check_swap.output
 }
 iousage()
 { 
@@ -255,7 +318,9 @@ iousage()
 			echo "$line"
 		fi
 		index=$(($index+1)) 
-	done < ./ios.txt
+	done < ./ios.txt 
+
+	rm -rf ./ios.txt
 
 } 
 
@@ -354,7 +419,7 @@ kdumpchk()
 		echo "KDUMP operation status           : "${statuschk}
 	
 	else 
-		echo "Please install lsb_release"
+		echo "Please install lsb_release package"
 	fi 
 
 }
@@ -412,21 +477,27 @@ if [ "$#" -lt 1 ]; then
 else
 	case $1 in  
 		"--save" )   
+			checkenv 
+			checkoutputdir
 			if [ -z $2 ]; then   
-				filedate=`date +"%Y%m%d-%H%M%S"`
-				file=${HOSTNAME}'_'${filedate}'.log' 
+				#filedate=`date +"%Y%m%d-%H%M%S"`
+				#file=${HOSTNAME}'_'${filedate}'.log'  
+				file=${OUTPUT_DIR}${OUTPUT_FILE}
 			elif [ -f $2 ]; then
 				usage
 				echo "Already exists "$2		
 			else  
 				file=$2	 
 			fi 
-		
-			title >> ${file} 2>&1
+			
+			title > ${file} 2>&1
 			basicchk >> ${file} 2>&1
-			usagechk >> ${file} 2>&1
+			usagechk >> ${file} 2>&1  
+			line
+			echo "FINISH"
 		;; 
-		"--print" ) 
+		"--print" )  
+			checkenv
 			clear
 			title
 			basicchk 
