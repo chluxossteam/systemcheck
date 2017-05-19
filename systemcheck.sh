@@ -18,6 +18,7 @@ RHELID="RedHatEnterpriseServer"
 UBUNTUID="Ubuntu"
 DEBIANID="Debian"
 CENTOSID="CentOS" 
+ORACOSID="OracleServer"
 SUSEID="openSUSEproject"
 
 # Default Variables
@@ -374,9 +375,8 @@ kdumpchk()
 		OSID=${OSID// /}
 
 		case $OSID in  
-			${RHELID} | ${CENTOSID})    
-				OS=${RHELID} 
-				echo $OS
+			${RHELID} | ${CENTOSID} | ${ORACOSID})    
+				#OS=${RHELID} 
 				RN=${OSRELEASE##Release:}
 				#echo ${RN:1:1} 
 
