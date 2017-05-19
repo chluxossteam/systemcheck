@@ -17,7 +17,8 @@ fi
 RHELID="RedHatEnterpriseServer"
 UBUNTUID="Ubuntu"
 DEBIANID="Debian"
-CENTOSID="CentOS"
+CENTOSID="CentOS" 
+SUSEID="openSUSEproject"
 
 # Default Variables
 OUTPUT_DIR=`pwd`
@@ -95,7 +96,7 @@ checkcmd()
 	if [ -x "$(command -v ${1})" ] ; then     
 		result="ok" 
 	else 
-		result="fail"
+		result="fail" 
 	fi   
 	echo ${1} ------------------------------ [${result}]
 }	
@@ -208,7 +209,11 @@ cpuusage()
 	section "CPU Usage"  
 	index=0	 
 
-	mpstat -P ALL > ./cpu.txt 
+	if [ -x "$(command -v mpstat)" ] ; then     
+		mpstat -P ALL > ./cpu.txt  
+	else 
+		ps -eo pcpu, pid, user,args | sort -k 1 -r | head -10 > ./cpu.txt
+	fi
 
 	while read line; do 
 		if [ $index -gt 1 ]; then  
@@ -364,18 +369,20 @@ kdumpchk()
 	if [ -x /usr/bin/lsb_release ]; then
 		OSID=`/usr/bin/lsb_release -i` 
 		OSRELEASE=`/usr/bin/lsb_release -r`  
+		OSID=${OSID:16}  
+		OSID=${OSID// /}
 
-
-		case "${OSID}" in  
-			"${OSID}" | [$RHELID][$CENTOSID])   
-				OS=${RHELID}
+		case $OSID in  
+			${RHELID} | ${CENTOSID})    
+				OS=${RHELID} 
+				echo $OS
 				RN=${OSRELEASE##Release:}
-				#echo ${RN:1:1}
-				
+				#echo ${RN:1:1} 
+
 				case ${RN:1:1} in  
 					6) 
-						grubcfg="/etc/grub.conf" 
-						#grubcfg="/etc/grub"${grubconfsuffix}".conf" 
+						#grubcfg="/etc/grub/grub.conf" 
+						grubcfg="/etc/grub"${grubconfsuffix}".conf" 
 						statuschk=`service kdump status`
 						;;
 					7)
@@ -383,16 +390,36 @@ kdumpchk()
 						statuschk=`systemctl status kdump | grep Active`
 					;;
 					*)	
-					echo ${RN} "---TEST "
+					echo ${RN} "NOT support Yet "
 					;;
 				esac 
 
 			;;
-			"${OSID}" | [$DEBIANID])
-				OS=${DEBIANID}
+			${DEBIANID})
+				OS=${DEBIANID} 
+				echo $OS
+				echo "NOT support Yet "
 			;;
-			"${OSID}" | [$UBUNTUID])
+			${UBUNTUID})
 				OS=${UBUNTUID}
+				echo $OS
+				echo "NOT support Yet "
+			;;
+			"${SUSEID}")
+				OS=${SUSEID}  
+				RN=${OSRELEASE##Release:}
+				case ${RN:1:2} in  
+					12)
+						grubcfg="/boot/grub2/grub"${grubconfsuffix}".cfg"
+						statuschk=`systemctl status kdump | grep Active`
+					;;
+					*)	
+					echo ${RN} "NOT support Yet "
+					;;
+				esac 
+			;;  
+			*) 
+				echo "N/A" 
 			;;
 		esac
 
@@ -472,17 +499,17 @@ runcmd()
 usage()
 { 
 	echo "Usage   : check_sys.sh [--save {filename}  |  --print] " 
-	echo "Options : \"--save filename\" will save log to filename"
-	echo "          \"--save \" will save log to systemchk_{TODAY}.log"
-	echo "          \"--print\" will print log on screen"
-	echo "          \"--help\" show this help screen"
+	echo "Options : \-s, --save filename will save log to filenam define from config"
+	echo "          \-p, --print will print log on screen"
+	echo "          \-h, --help show this help screen"
 }
 
 if [ "$#" -lt 1 ]; then  
 	usage
 else
 	case $1 in  
-		"--save" )   
+		"--save" | "-s") 
+			clear   
 			checkenv 
 			checkoutputdir
 			if [ -z $2 ]; then   
@@ -502,14 +529,14 @@ else
 			line
 			echo "FINISH"
 		;; 
-		"--print" )  
-			checkenv
+		"--print" | "-p")  
 			clear
+			checkenv
 			title
 			basicchk 
 			usagechk 
 		;; 
-		"--help" ) 
+		"--help" | "-h" ) 
 			usage 
 			exit
 		;;
