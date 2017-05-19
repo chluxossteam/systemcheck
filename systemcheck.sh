@@ -191,15 +191,15 @@ diskinfo()
 basicchk()
 {     
 	sysinfo
-	pmcheck 
-	kernelchk 
-	kdumpchk
-	croninfo
-	networkchk	
-	routechk
-	protocolinfo 
-	diskinfo
-	fsinfo 
+	runcmd pmcheck 
+	runcmd kernelchk 
+	runcmd kdumpchk
+	runcmd croninfo
+	runcmd networkchk	
+	runcmd routechk
+	runcmd protocolinfo 
+	runcmd diskinfo
+	runcmd fsinfo 
 } 
 
 
@@ -244,7 +244,7 @@ cpuusage()
 #}
 
 
-function checkmemory()
+memoryusage()
 { 
 	section "Memeory Usage"
 	tmpfile=`mktemp /tmp/pslist_XXXXXX.tmp`
@@ -268,7 +268,7 @@ function checkmemory()
 	echo Total Real Using Memory : "$RSS" KiB 
 }
 
-function printstate()
+memorystatus()
 {
 	section "Pricess and Memory status"
 	cat  $tmpfile
@@ -282,7 +282,7 @@ function printstate()
 	section "vmstat -d -S kb" 
 	vmstat -d -Sm
 }
-function checkswap()
+swapstatus()
 { 
 	section "Swap Usage Status" 
 	ps ax -o pid,args | grep -v '^  PID'|sed -e 's,^ *,,' > ./ps_ax.output
@@ -296,16 +296,16 @@ function checkswap()
         	pid=$(echo $swappid| cut -d' ' -f3|cut -d'/' -f3)
         	if ( [ $swapusage -ne 0 ] ); then
                 	echo -ne "$swapusage kb\t\t" >>/tmp/results
-                	egrep "^$pid " ./ps_ax.output |sed -e 's,^[0-9]* ,,' >>./results
+                	egrep "^$pid " ./ps_ax.output |sed -e 's,^[0-9]* ,,' >>./check_swap.output
         	fi
 	done
 
 	echo "Top 10 swap using processes which are still running:"
-	sort -nr ./results | head -n 10 
+	sort -nr ./check_swap.output | head -n 10 
 	rm -rf ./ps_ax.output
 	rm -rf ./check_swap.output
 }
-iousage()
+iostatus()
 { 
 	section "iostate"
 
@@ -445,21 +445,28 @@ dimdecodechk()
 }
 
 usagechk()
-{ 
-	cpuusage
-	checkmemory
-	printstate 
-	checkswap 
-	iousage 
-#	#vmstatchk 
-	lastchk 
-	pschk  
-	zombiechk
-	errorchk  
-	dimdecodechk
+{  
+	runcmd cpuusage
+	runcmd cpuusage
+	runcmd memoryusage
+	runcmd memorystatus
+	runcmd swapstatus
+	runcmd iostatus
+	runcmd pschk  
+	runcmd zombiechk
+	runcmd lastchk 
+	runcmd errorchk  
+	runcmd dimdecodechk
 } 
 
-
+runcmd()
+{ 
+	#echo ${1} "(${!1})" 
+	#echo "${1} ---------------------- [${!1}]"
+	if [ "on" == ${!1} ]; then 
+		${1}  
+	fi
+}
 
 
 usage()
