@@ -211,8 +211,8 @@ cpuusage()
 
 	if [ -x "$(command -v mpstat)" ] ; then     
 		mpstat -P ALL > ./cpu.txt  
-	else 
-		ps -eo pcpu, pid, user,args | sort -k 1 -r | head -10 > ./cpu.txt
+	else  
+		top -bH -n 1 | head -5
 	fi
 
 	while read line; do 
@@ -222,19 +222,20 @@ cpuusage()
 		index=$(($index+1)) 
 	done < ./cpu.txt
 
-    section "CPU Idle alert"
-    idle_limit=10.0
-    cpu_idle=$(mpstat 1 5 | tail -n 1 | awk '{print $NF}') 
-    is_alert=$(echo "$cpu_idle < $idle_limit" | bc) 
+    if [ -x "$(command -v mpstat)" ] ; then     
+        section "CPU Idle alert"
+        idle_limit=10.0
+        cpu_idle=$(mpstat 1 5 | tail -n 1 | awk '{print $NF}') 
+        is_alert=$(echo "$cpu_idle < $idle_limit" | bc) 
 
-    if [ ${is_alert} -eq 1 ]; then 
-		date_str=$(date '+%Y/%m/%d %H:%M:%S') 
-		echo "[$date_str] CPU %idle Alert : $cpu_idle (%)"
-	else  
-		echo "No Alert"
-	fi 
-
-	rm ./cpu.txt
+        if [ ${is_alert} -eq 1 ]; then 
+            date_str=$(date '+%Y/%m/%d %H:%M:%S') 
+	    echo "[$date_str] CPU %idle Alert : $cpu_idle (%)"
+         else  
+            echo "No Alert"
+         fi 
+         rm ./cpu.txt 
+    fi 
 } 
 
 #memoryusage()
@@ -473,7 +474,6 @@ dimdecodechk()
 
 usagechk()
 {  
-	runcmd cpuusage
 	runcmd cpuusage
 	runcmd memoryusage
 	runcmd memorystatus
