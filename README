@@ -4,6 +4,9 @@ system health check for linux
 - config file  : systemcheck.conf 
 - execute file : systemcheck.sh 
 
+Requirement
+1. sysstat
+2. lsb_release
 
 Installation 
 1. clone this proeject to your linux system 
@@ -15,11 +18,12 @@ Installation
  
 
 Execution Parameter
-Usage   : check_sys.sh [--save {filename}  |  --print]
-Options : --save filename" will save log to filename
-          --save " will save log to systemchk_{TODAY}.log
-          --print" will print log on screen
-          --help" show this help screen
+Usage   : check_sys.sh [--save {filename}  |  -p --print] "
+Options : -s, --save filename will save log to filenam define from config"
+          -p, --print will print log on screen"
+          -h, --help show this help screen"
+
+
 
 
 Config Parameter 
