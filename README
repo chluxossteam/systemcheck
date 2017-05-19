@@ -5,14 +5,16 @@ system health check for linux
 - execute file : systemcheck.sh 
 
 Support OS 
-1. RedHat Enterprise(CentOS) 6,7 
-2. Suse Linux 12.x 
-3. Oracle Linux 6,7 
+- RedHat Enterprise(CentOS) 6,7 
+- Suse Linux 12.x 
+- Oracle Linux 6,7 
 
 
 Requirement
-1. sysstat
-2. lsb_release
+- sysstat
+- lsb_release
+- net-tools
+
 
 Installation 
 1. clone this proeject to your linux system 
