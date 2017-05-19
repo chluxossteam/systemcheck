@@ -4,6 +4,12 @@ system health check for linux
 - config file  : systemcheck.conf 
 - execute file : systemcheck.sh 
 
+Support OS 
+1. RedHat Enterprise(CentOS) 6,7 
+2. Suse Linux 12.x 
+3. Oracle Linux 6,7 
+
+
 Requirement
 1. sysstat
 2. lsb_release
