@@ -275,7 +275,7 @@ memoryusage()
 
 memorystatus()
 {
-	section "Pricess and Memory status"
+	section "Process and Memory status"
 	cat  $tmpfile
 
 	section 'Free Memory Check'
